@@ -3,4 +3,4 @@
 /demo_book_manage
 .env.local
 demo_book_manage
-demo.py
+demo.py"staticfiles/" 
