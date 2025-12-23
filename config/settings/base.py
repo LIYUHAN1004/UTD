@@ -193,4 +193,16 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 
 
+# Django 4.2+ / 5.x 必須要有 STORAGES["default"]
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"   # BASE_DIR 如果是 pathlib.Path
 
