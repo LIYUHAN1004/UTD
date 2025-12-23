@@ -1,10 +1,12 @@
-"""
-URL configuration for config project.
-"""
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('uma/', include('apps.uma.urls')),  # ✅ 正確引入 uma app
+    path("admin/", admin.site.urls),
+    path("uma/", include("apps.uma.urls")),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

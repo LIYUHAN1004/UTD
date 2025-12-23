@@ -117,9 +117,65 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ==========================================
+# Cache 設定 - 使用 Redis
+# ==========================================
+REDIS_URI = os.getenv('REDIS_URI', 'redis://127.0.0.1:6379/1')
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': REDIS_URI,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        'KEY_PREFIX': 'uma',  # 所有 key 都會加上這個前綴
+        'TIMEOUT': 300,  # 預設快取時間 5 分鐘（單位：秒）
+    }
+}
+
+# ==========================================
+# Celery 設定 - 使用 Redis 作為 Broker
+# ==========================================
+# Broker：任務佇列存放的地方（使用 Redis）
+CELERY_BROKER_URL = REDIS_URI
+
+# Result Backend：任務結果存放的地方（可選，這裡也用 Redis）
+CELERY_RESULT_BACKEND = REDIS_URI
+
+# 時區設定（與 Django 一致）
+CELERY_TIMEZONE = TIME_ZONE
+
+# 接受的內容類型
+CELERY_ACCEPT_CONTENT = ['json']
+
+# 任務序列化格式
+CELERY_TASK_SERIALIZER = 'json'
+
+# 結果序列化格式
+CELERY_RESULT_SERIALIZER = 'json'
+
+# 啟動時重試連線（消除 Celery 6.0 棄用警告）
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+# settings.py
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# =========================
+# Django Channels / WebSocket
+# =========================
+
+
+
+

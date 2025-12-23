@@ -1,0 +1,48 @@
+<h2>分析中...</h2>
+
+<div style="width: 420px; border: 1px solid #ccc; height: 18px;">
+  <div id="bar" style="height: 100%; width: 0%;"></div>
+</div>
+<p id="text">連線中...</p>
+
+<script>
+  const jobId = "{{ job_id }}";
+  const wsScheme = (location.protocol === "https:") ? "wss" : "ws";
+  const wsUrl = `${wsScheme}://${location.host}/ws/uma/ocr/${jobId}/`;
+
+  const bar = document.getElementById("bar");
+  const text = document.getElementById("text");
+
+  const ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    text.textContent = "已連線，等待進度...";
+  };
+
+  ws.onmessage = (evt) => {
+    const data = JSON.parse(evt.data);
+    const percent = data.percent ?? 0;
+    const stage = data.stage ?? "";
+    const detail = data.detail ?? "";
+
+    bar.style.width = percent + "%";
+    text.textContent = `${percent}% [${stage}] ${detail}`;
+
+    if (stage === "done") {
+      // 你可以導去結果頁（看你結果頁的 URL）
+      // window.location.href = "/uma/results/";
+      ws.close();
+    }
+    if (stage === "error") {
+      ws.close();
+    }
+  };
+
+  ws.onclose = () => {
+    // optional
+  };
+
+  ws.onerror = () => {
+    text.textContent = "WebSocket 連線失敗（請檢查 channels/asgi/路由）";
+  };
+</script>

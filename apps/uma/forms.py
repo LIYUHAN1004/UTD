@@ -1,20 +1,35 @@
+# apps/uma/forms.py
+from __future__ import annotations
+
 from django import forms
 
-class HorseFilterForm(forms.Form):
-    
-    distance_type = forms.ChoiceField(
-        choices=[('', '不指定'), ('短距離', '短距離'), ('一哩', '一哩'), ('中距離', '中距離'), ('長距離', '長距離')],
-        required=False,
-        label='距離類型'
+
+class MultiFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultiImageField(forms.FileField):
+    """
+    讓 Django Form 正確接受 request.FILES.getlist("images")
+    """
+    widget = MultiFileInput
+
+    def clean(self, data, initial=None):
+        # data 可能是單個 UploadedFile，也可能是 list
+        if data is None:
+            data = []
+        if not isinstance(data, (list, tuple)):
+            data = [data]
+
+        cleaned = []
+        for f in data:
+            cleaned.append(super().clean(f, initial))
+        return cleaned
+
+
+class TrainingImageUploadForm(forms.Form):
+    images = MultiImageField(
+        required=True,
+        widget=MultiFileInput(attrs={"accept": "image/*", "multiple": True}),
+        label="上傳圖片",
     )
-    running_style = forms.ChoiceField(
-        choices=[('', '不指定'), ('逃げ', '逃げ'), ('先行', '先行'), ('差し', '差し'), ('追込', '追込')],
-        required=False,
-        label='跑法'
-    )
-    rarity = forms.ChoiceField(
-        choices=[('', '不指定'), ('★1', '★1'), ('★2', '★2'), ('★3', '★3'), ('★4', '★4'), ('★5', '★5')],
-        required=False,
-        label='星級'
-    )
-    min_score = forms.IntegerField(required=False, label='最低分數')

@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 style="margin-bottom:16px;">上傳訓練截圖</h1>
+
+<!-- 上傳進度 Overlay -->
+<div id="upload-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:9999;">
+  <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+              width:min(560px, 92vw); background:#fff; border-radius:14px; padding:18px 18px 14px; box-shadow:0 10px 30px rgba(0,0,0,.2);">
+    <div style="font-weight:700; margin-bottom:10px;">上傳中…</div>
+    <div id="upload-status" style="font-size:13px; color:#444; margin-bottom:10px;">準備上傳…</div>
+    <div style="height:10px; background:#eee; border-radius:999px; overflow:hidden;">
+      <div id="upload-bar" style="height:100%; width:0%; background:#1a73e8;"></div>
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:13px; color:#444;">
+      <div id="upload-count">0/0</div>
+      <div id="upload-pct">0%</div>
+    </div>
+    <div style="margin-top:8px; font-size:12px; color:#777;">
+      （提示：這是「上傳檔案」進度；上傳後伺服器會開始 OCR 處理）
+    </div>
+  </div>
+</div>
+
+<form id="upload-form" method="post" enctype="multipart/form-data" style="margin-bottom:24px;">
+  {% csrf_token %}
+  <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+    <input type="file" name="images" id="id_images" accept="image/*" multiple>
+    <button type="submit" id="upload-btn">上傳圖片</button>
+  </div>
+</form>
+
+{% if results %}
+<form method="post" action="{% url 'uma:bulk_update_results' %}" id="bulk-form">
+  {% csrf_token %}
+
+  {% for r in results %}
+  <input type="hidden" name="result_ids" value="{{ r.id }}">
+
+  <div style="border:1px solid #ddd; border-radius:10px; padding:16px; margin-bottom:18px;">
+
+    <!-- Header：裁切頭像 + 分數 + 查看原圖 -->
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+
+      <div style="display:flex; align-items:center; gap:12px;">
+        {% if r.portrait_crop %}
+          <img src="{{ r.portrait_crop.url }}" alt="portrait"
+               style="width:88px; height:88px; object-fit:cover; border-radius:12px; border:1px solid #ddd;">
+        {% elif r.portrait %}
+          <img src="{{ r.portrait.url }}" alt="portrait"
+               style="width:88px; height:88px; object-fit:cover; border-radius:12px; border:1px solid #ddd;">
+        {% endif %}
+
+        <div>
+          <div style="font-weight:600; margin-bottom:6px;">辨識結果（可手動微調）</div>
+
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <div>
+              <div style="font-size:13px; color:#444; margin-bottom:4px;">分數</div>
+              <input type="number" name="score_{{ r.id }}" value="{{ r.score }}" min="0" step="1" style="width:180px;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if r.portrait %}
+      <div>
+        <a href="{{ r.portrait.url }}" target="_blank" rel="noopener">查看原圖</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <hr style="margin:14px 0;">
+
+    <!-- 能力值 -->
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; max-width:900px;">
+
+      <div>
+        <div style="margin-bottom:6px;">速度</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="number" id="speed_{{ r.id }}" name="speed_{{ r.id }}" value="{{ r.speed }}" min="0" step="1" style="width:140px;">
+          <button type="button" class="step-btn" data-target="speed_{{ r.id }}" data-delta="-1000">-1000</button>
+          <button type="button" class="step-btn" data-target="speed_{{ r.id }}" data-delta="1000">+1000</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="margin-bottom:6px;">持久力</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="number" id="stamina_{{ r.id }}" name="stamina_{{ r.id }}" value="{{ r.stamina }}" min="0" step="1" style="width:140px;">
+          <button type="button" class="step-btn" data-target="stamina_{{ r.id }}" data-delta="-1000">-1000</button>
+          <button type="button" class="step-btn" data-target="stamina_{{ r.id }}" data-delta="1000">+1000</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="margin-bottom:6px;">力量</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="number" id="power_{{ r.id }}" name="power_{{ r.id }}" value="{{ r.power }}" min="0" step="1" style="width:140px;">
+          <button type="button" class="step-btn" data-target="power_{{ r.id }}" data-delta="-1000">-1000</button>
+          <button type="button" class="step-btn" data-target="power_{{ r.id }}" data-delta="1000">+1000</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="margin-bottom:6px;">意志力</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="number" id="guts_{{ r.id }}" name="guts_{{ r.id }}" value="{{ r.guts }}" min="0" step="1" style="width:140px;">
+          <button type="button" class="step-btn" data-target="guts_{{ r.id }}" data-delta="-1000">-1000</button>
+          <button type="button" class="step-btn" data-target="guts_{{ r.id }}" data-delta="1000">+1000</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="margin-bottom:6px;">智力</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="number" id="intelligence_{{ r.id }}" name="intelligence_{{ r.id }}" value="{{ r.intelligence }}" min="0" step="1" style="width:140px;">
+          <button type="button" class="step-btn" data-target="intelligence_{{ r.id }}" data-delta="-1000">-1000</button>
+          <button type="button" class="step-btn" data-target="intelligence_{{ r.id }}" data-delta="1000">+1000</button>
+        </div>
+      </div>
+
+    </div>
+
+    <hr style="margin:14px 0;">
+
+    <!-- 資質：hidden input + buttons -->
+    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px; max-width:900px;">
+      <div>
+        <div style="margin-bottom:8px;">場地</div>
+        <input type="hidden" id="terrain_{{ r.id }}" name="terrain_{{ r.id }}" value="{{ r.terrain }}">
+        <div class="btn-group" data-field="terrain_{{ r.id }}">
+          <button type="button" class="choice-btn" data-value="草地">草地</button>
+          <button type="button" class="choice-btn" data-value="沙地">沙地</button>
+          <button type="button" class="clear-btn">清除</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="margin-bottom:8px;">距離</div>
+        <input type="hidden" id="distance_{{ r.id }}" name="distance_{{ r.id }}" value="{{ r.distance }}">
+        <div class="btn-group" data-field="distance_{{ r.id }}">
+          <button type="button" class="choice-btn" data-value="短距離">短距離</button>
+          <button type="button" class="choice-btn" data-value="一哩">一哩</button>
+          <button type="button" class="choice-btn" data-value="中距離">中距離</button>
+          <button type="button" class="choice-btn" data-value="長距離">長距離</button>
+          <button type="button" class="clear-btn">清除</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="margin-bottom:8px;">腳質</div>
+        <input type="hidden" id="strategy_{{ r.id }}" name="strategy_{{ r.id }}" value="{{ r.strategy }}">
+        <div class="btn-group" data-field="strategy_{{ r.id }}">
+          <button type="button" class="choice-btn" data-value="領頭">領頭</button>
+          <button type="button" class="choice-btn" data-value="前列">前列</button>
+          <button type="button" class="choice-btn" data-value="居中">居中</button>
+          <button type="button" class="choice-btn" data-value="後追">後追</button>
+          <button type="button" class="clear-btn">清除</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  {% endfor %}
+
+  <button type="submit" style="padding:10px 16px;">儲存全部</button>
+</form>
+
+<style>
+  .btn-group { display:flex; gap:8px; flex-wrap:wrap; }
+  .choice-btn, .clear-btn, .step-btn { padding:6px 10px; border:1px solid #aaa; background:#fff; border-radius:6px; cursor:pointer; }
+  .choice-btn.active { border-color:#1a73e8; color:#1a73e8; }
+</style>
+{% endif %}
+
+<script>
+  // -----------------------
+  // 1) 上傳進度（XHR）
+  // -----------------------
+  const overlay = document.getElementById("upload-overlay");
+  const bar = document.getElementById("upload-bar");
+  const pct = document.getElementById("upload-pct");
+  const statusEl = document.getElementById("upload-status");
+  const countEl = document.getElementById("upload-count");
+  const uploadForm = document.getElementById("upload-form");
+  const uploadBtn = document.getElementById("upload-btn");
+
+  uploadForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const fileInput = uploadForm.querySelector('input[type="file"][name="images"]');
+    const files = fileInput?.files || [];
+    if (!files.length) {
+      alert("請先選擇圖片");
+      return;
+    }
+
+    // 開啟 overlay
+    overlay.style.display = "block";
+    uploadBtn.disabled = true;
+
+    countEl.textContent = `0/${files.length}`;
+    statusEl.textContent = "上傳中…";
+    bar.style.width = "0%";
+    pct.textContent = "0%";
+
+    const fd = new FormData(uploadForm); // ✅ 含 csrf + images
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", uploadForm.action || window.location.href, true);
+
+    xhr.upload.onprogress = (ev) => {
+      if (!ev.lengthComputable) return;
+      const p = Math.round((ev.loaded / ev.total) * 100);
+      bar.style.width = p + "%";
+      pct.textContent = p + "%";
+      countEl.textContent = `0/${files.length}`;
+    };
+
+    xhr.onload = () => {
+      uploadBtn.disabled = false;
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        statusEl.textContent = "處理完成，載入結果…";
+        // 直接替換整個頁面（回傳是 HTML）
+        document.open();
+        document.write(xhr.responseText);
+        document.close();
+      } else {
+        overlay.style.display = "none";
+        alert(`上傳失敗（HTTP ${xhr.status}）`);
+      }
+    };
+
+    xhr.onerror = () => {
+      uploadBtn.disabled = false;
+      overlay.style.display = "none";
+      alert("上傳失敗（網路錯誤）");
+    };
+
+    xhr.send(fd);
+  });
+
+  // -----------------------
+  // 2) ±1000
+  // -----------------------
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".step-btn");
+    if (!btn) return;
+
+    const targetId = btn.dataset.target;
+    const delta = parseInt(btn.dataset.delta || "0", 10);
+    const input = document.getElementById(targetId);
+    if (!input) return;
+
+    const cur = parseInt(input.value || "0", 10) || 0;
+    let next = cur + delta;
+    if (next < 0) next = 0;
+    input.value = next;
+  });
+
+  // -----------------------
+  // 3) 資質按鈕：寫入 hidden + active
+  // -----------------------
+  function syncGroup(groupEl) {
+    const field = groupEl.dataset.field;
+    const hidden = document.getElementById(field);
+    const val = (hidden?.value || "").trim();
+    groupEl.querySelectorAll(".choice-btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.value === val);
+    });
+  }
+
+  document.querySelectorAll(".btn-group").forEach(syncGroup);
+
+  document.addEventListener("click", (e) => {
+    const choice = e.target.closest(".choice-btn");
+    const clear = e.target.closest(".clear-btn");
+    const group = e.target.closest(".btn-group");
+    if (!group) return;
+
+    const field = group.dataset.field;
+    const hidden = document.getElementById(field);
+    if (!hidden) return;
+
+    if (choice) {
+      hidden.value = choice.dataset.value || "";
+      syncGroup(group);
+    } else if (clear) {
+      hidden.value = "";
+      syncGroup(group);
+    }
+  });
+
+  // 送出前檢查：每筆都要有 terrain/distance/strategy
+  document.getElementById("bulk-form")?.addEventListener("submit", (e) => {
+    const ids = Array.from(document.querySelectorAll('input[name="result_ids"]')).map(i => i.value);
+    for (const id of ids) {
+      const t = (document.getElementById(`terrain_${id}`)?.value || "").trim();
+      const d = (document.getElementById(`distance_${id}`)?.value || "").trim();
+      const s = (document.getElementById(`strategy_${id}`)?.value || "").trim();
+      if (!t || !d || !s) {
+        e.preventDefault();
+        alert(`第 ${id} 筆尚未選完整資質（場地/距離/作戰必填）`);
+        return;
+      }
+    }
+  });
+</script>
+
+{% endblock %}

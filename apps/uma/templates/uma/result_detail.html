@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Result #{{ r.id }}</h1>
+
+  <p>分數：{{ r.score }}</p>
+  <ul>
+    <li>速度：{{ r.speed }}</li>
+    <li>耐力：{{ r.stamina }}</li>
+    <li>力量：{{ r.power }}</li>
+    <li>意志：{{ r.guts }}</li>
+    <li>智力：{{ r.intelligence }}</li>
+    <li>場地：{{ r.terrain }}</li>
+    <li>距離：{{ r.distance }}</li>
+    <li>腳質：{{ r.strategy }}</li>
+  </ul>
+
+  {% if r.portrait %}
+    <p><a href="{{ r.portrait.url }}" target="_blank" rel="noopener">查看原圖</a></p>
+  {% endif %}
+
+  {% if r.portrait_crop %}
+    <img src="{{ r.portrait_crop.url }}" alt="portrait" style="width:120px; height:120px; object-fit:cover; border-radius:12px;">
+  {% endif %}
+
+  <p><a href="{% url 'uma:upload_training_results' %}">回上傳頁</a></p>
+{% endblock %}
