@@ -18,6 +18,9 @@ from django.core.files.base import ContentFile
 from django.utils import timezone
 from .forms import TrainingImageUploadForm
 from .models import TrainingResult
+from django.db.models import Q
+from django.contrib.auth.decorators import login_required
+from .models import TrainingResult
 
 # ====================================================
 # Windows Tesseract 路徑
@@ -424,3 +427,76 @@ def bulk_update_results(request):
 def result_detail(request, pk: int):
     r = get_object_or_404(TrainingResult, pk=pk, user=request.user)
     return render(request, "uma/result_detail.html", {"r": r})
+
+@login_required
+def result_list(request):
+    qs = TrainingResult.objects.filter(user=request.user)
+
+    # ===== 篩選 =====
+    terrain = request.GET.get("terrain", "")
+    distance = request.GET.get("distance", "")
+    strategy = request.GET.get("strategy", "")
+
+    if terrain:
+        qs = qs.filter(terrain=terrain)
+    if distance:
+        qs = qs.filter(distance=distance)
+    if strategy:
+        qs = qs.filter(strategy=strategy)
+
+    # ===== 排序 =====
+    sort = request.GET.get("sort", "-score")  # 預設分數由高到低
+
+    ALLOWED_SORTS = {
+        "score", "-score",
+        "speed", "-speed",
+        "stamina", "-stamina",
+        "power", "-power",
+        "guts", "-guts",
+        "intelligence", "-intelligence",
+    }
+
+    if sort not in ALLOWED_SORTS:
+        sort = "-score"
+
+    qs = qs.order_by(sort)
+
+    context = {
+        "results": qs,
+        "selected": {
+            "terrain": terrain,
+            "distance": distance,
+            "strategy": strategy,
+            "sort": sort,
+        },
+        "choices": {
+            "terrain": ["草地", "沙地"],
+            "distance": ["短距離", "一哩", "中距離", "長距離"],
+            "strategy": ["領頭", "前列", "居中", "後追"],
+        },
+    }
+    return render(request, "uma/result_list.html", context)
+
+    qs = TrainingResult.objects.filter(user=request.user).order_by("-created_at")
+
+    terrain = request.GET.get("terrain", "")
+    distance = request.GET.get("distance", "")
+    strategy = request.GET.get("strategy", "")
+
+    if terrain:
+        qs = qs.filter(terrain=terrain)
+    if distance:
+        qs = qs.filter(distance=distance)
+    if strategy:
+        qs = qs.filter(strategy=strategy)
+
+    context = {
+        "results": qs,
+        "selected": {"terrain": terrain, "distance": distance, "strategy": strategy},
+        "choices": {
+            "terrain": ["草地", "沙地"],        # 用你專案 whitelist 的中文
+            "distance": ["短距離", "一哩", "中距離", "長距離"],
+            "strategy": ["領頭", "前列", "居中", "後追"],
+        },
+    }
+    return render(request, "uma/result_list.html", context)
