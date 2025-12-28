@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 
 urlpatterns = [
     path("", lambda request: redirect("/uma/upload/")),  # 👈 新增首頁
+    path("accounts/", include("django.contrib.auth.urls")),
     path("admin/", admin.site.urls),
     path("uma/", include("apps.uma.urls")),
 ]
