@@ -139,3 +139,5 @@ whitenoise==6.7.0
 wordcloud==1.9.3
 XlsxWriter==3.2.2
 zope.interface==7.2
+dj-database-url
+psycopg2-binary
