@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'apps.uma',
+    'apps.core',  # ← 新增這行
 ]
 
 # config/settings/base.py
