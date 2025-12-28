@@ -23,20 +23,6 @@ from django.contrib.auth.decorators import login_required
 from .models import TrainingResult
 
 
-import traceback
-import logging
-logger = logging.getLogger(__name__)
-
-@login_required
-def upload_training_results(request):
-    try:
-        # 原本內容
-        ...
-    except Exception as e:
-        logger.error("UPLOAD FAILED: %s", e)
-        logger.error(traceback.format_exc())
-        raise
-
 # ====================================================
 # Windows Tesseract 路徑
 # ====================================================
