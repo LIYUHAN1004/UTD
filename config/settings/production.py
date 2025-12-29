@@ -11,7 +11,7 @@ load_dotenv()
 DEBUG = False
 
 # 從環境變數讀取允許的主機
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', "utd2.zeabur.app").split(',')
 
 # 資料庫設定
 # Zeabur 會自動注入 POSTGRES_CONNECTION_STRING

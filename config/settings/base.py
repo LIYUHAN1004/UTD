@@ -12,9 +12,13 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
 import dj_database_url
+
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 DATABASES = {
     "default": dj_database_url.config(
@@ -23,10 +27,6 @@ DATABASES = {
         ssl_require=True,
     )
 }
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -34,7 +34,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = 'django-insecure-s)e2v(bac2!p)l!*&z6^+d&oc#@#n9udax2f*d&l8!+tdf@cqq'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -81,8 +81,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'  # ← 新增:收集後的靜態檔案存
 
 # Whitenoise 設定
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",  # ← 使用 Whitenoise
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
 
@@ -149,14 +152,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -170,15 +165,14 @@ REDIS_URI = os.getenv('REDIS_URI', 'redis://127.0.0.1:6379/1')
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': REDIS_URI,
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
+        
         'KEY_PREFIX': 'uma',  # 所有 key 都會加上這個前綴
         'TIMEOUT': 300,  # 預設快取時間 5 分鐘（單位：秒）
     }
 }
 
+
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
 # ==========================================
 # Celery 設定 - 使用 Redis 作為 Broker
 # ==========================================
@@ -214,15 +208,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 
 
-# Django 4.2+ / 5.x 必須要有 STORAGES["default"]
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
+
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"   # BASE_DIR 如果是 pathlib.Path
@@ -235,15 +221,16 @@ AUTHENTICATION_BACKENDS = (
 LOGIN_REDIRECT_URL = "/uma/upload/"    # 登入成功後去哪
 LOGOUT_REDIRECT_URL = "/accounts/login/"       # 登出後去哪
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_AUTHENTICATION_METHOD = "username_email"  # 或 "email"
+ # 或 "email"
 ACCOUNT_EMAIL_VERIFICATION = "none"               # 先關閉驗證，之後再開
 SOCIALACCOUNT_LOGIN_ON_GET = True                 # 點 Google 直接跳轉，不用再確認
 
 # allauth 設定：只用社群登入，不開放一般註冊頁
-ACCOUNT_EMAIL_REQUIRED = True
+
 ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_AUTHENTICATION_METHOD = "username_email"
+
+
 
 # Google 回來後自動登入/自動建立帳號
 SOCIALACCOUNT_AUTO_SIGNUP = True
@@ -251,6 +238,5 @@ SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_EMAIL_REQUIRED = True
 
 # 進出站導向（你可以改成你要的頁）
-LOGIN_REDIRECT_URL = "/uma/upload/"
-LOGOUT_REDIRECT_URL = "/accounts/login/"
 SOCIALACCOUNT_ADAPTER = "config.adapters.SocialAccountAdapter"
+CSRF_TRUSTED_ORIGINS = ["https://utd2.zeabur.app"]
