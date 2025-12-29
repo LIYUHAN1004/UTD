@@ -19,6 +19,19 @@
 
   .pill-btn.active{ background:#111; color:#fff; border-color:#111; }
   .stat-input{ max-width: 220px; }
+/* 只影響「清除」按鈕 */
+  button[data-clear]{
+  background-color: #fde2e2;   /* 淡紅底 */
+  border-color: #f5b5b5;
+  color: #842029;
+    }
+
+button[data-clear]:hover{
+  background-color: #f8caca;
+  border-color: #f1a1a1;
+  color: #842029;
+}
+
 </style>
 
 <div class="card shadow-sm">
@@ -35,7 +48,7 @@
       <!-- 上半部：左頭像 / 右分數+五維（像自動辨識頁） -->
       <div class="row g-4 align-items-start">
         <div class="col-md-3">
-          <div class="mb-2 fw-bold">頭像</div>
+          <div class="mb-2 fw-bold">馬娘</div>
           <div class="portrait-grid" id="portrait-grid">
             {% for key, label in uma_choices %}
               <button type="button" class="portrait-btn" data-uma-key="{{ key }}" title="{{ label }}">

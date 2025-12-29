@@ -1,0 +1,41 @@
+{% extends "account/auth_base.html" %}
+
+{% block title %}Sign out{% endblock %}
+
+{% block content %}
+<style>
+  .auth-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .auth-card {
+    width: min(420px, 92vw);
+    background: #fff;
+    border-radius: 18px;
+    padding: 28px;
+    border: 1px solid rgba(0,0,0,.08);
+    box-shadow: 0 10px 35px rgba(0,0,0,.08);
+  }
+</style>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="fw-bold fs-5 mb-2">Sign out</div>
+    <div class="text-muted mb-4">確定要登出嗎？</div>
+
+    <form method="post" action="{% url 'account_logout' %}">
+      {% csrf_token %}
+      <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'uma:upload_training_results' %}" class="btn btn-outline-secondary">
+          Cancel
+        </a>
+        <button class="btn btn-danger" type="submit">
+          Sign out
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

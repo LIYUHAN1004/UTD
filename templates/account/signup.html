@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load account %}
+
+{% block title %}註冊 | UMA Record{% endblock %}
+
+{% block content %}
+<style>
+  .auth-wrap{
+    min-height: calc(100vh - 120px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 40px 16px;
+    background: #f5f7fb;
+  }
+  .auth-card{
+    width: min(520px, 92vw);
+    background:#fff;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    padding: 28px;
+  }
+  .auth-title{
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0;
+  }
+  .auth-sub{
+    color:#6b7280;
+    margin-top: 6px;
+    font-size: 14px;
+  }
+  .google-badge{
+    width:36px;height:36px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    background:#f1f5f9;
+    font-weight:800;
+  }
+  .hint{
+    color:#6b7280;
+    font-size: 13px;
+  }
+  .divider{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin: 18px 0;
+    color:#9ca3af;
+    font-size: 12px;
+  }
+  .divider:before,.divider:after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:#e5e7eb;
+  }
+</style>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="d-flex align-items-center gap-3">
+      <div class="google-badge">G</div>
+      <div>
+        <h1 class="auth-title">註冊</h1>
+        <div class="auth-sub">建立 UMA Record 帳號</div>
+      </div>
+    </div>
+
+    <div class="divider">或使用 Email 註冊</div>
+
+    <form method="post" action="{% url 'account_signup' %}" class="mt-2">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <!-- email -->
+      <div class="mb-3">
+        <label class="form-label fw-bold">電子信箱</label>
+        {{ form.email.as_widget|safe }}
+        {% if form.email.errors %}
+          <div class="text-danger small mt-1">{{ form.email.errors|striptags }}</div>
+        {% endif %}
+        <div class="hint mt-1">請使用常用信箱，之後可用來找回帳號。</div>
+      </div>
+
+      <!-- username (如果你的設定還需要 username) -->
+      {% if form.username %}
+      <div class="mb-3">
+        <label class="form-label fw-bold">使用者名稱</label>
+        {{ form.username.as_widget|safe }}
+        {% if form.username.errors %}
+          <div class="text-danger small mt-1">{{ form.username.errors|striptags }}</div>
+        {% endif %}
+        <div class="hint mt-1">可輸入暱稱，之後也可以再改。</div>
+      </div>
+      {% endif %}
+
+      <!-- password -->
+      {% if form.password1 %}
+      <div class="mb-3">
+        <label class="form-label fw-bold">密碼</label>
+        {{ form.password1.as_widget|safe }}
+        {% if form.password1.errors %}
+          <div class="text-danger small mt-1">{{ form.password1.errors|striptags }}</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if form.password2 %}
+      <div class="mb-3">
+        <label class="form-label fw-bold">確認密碼</label>
+        {{ form.password2.as_widget|safe }}
+        {% if form.password2.errors %}
+          <div class="text-danger small mt-1">{{ form.password2.errors|striptags }}</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+      {% endif %}
+
+      <button class="btn btn-primary w-100 py-2 fw-bold" type="submit">
+        註冊
+      </button>
+
+      <div class="text-center mt-3">
+        <span class="hint">已經有帳號？</span>
+        <a href="{% url 'account_login' %}" class="fw-bold">登入</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // 把 allauth 產生的 input 套上 bootstrap class（避免你還沒改 form widget）
+  document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach(el=>{
+    el.classList.add('form-control');
+  });
+</script>
+{% endblock %}

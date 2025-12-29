@@ -71,6 +71,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "allauth.account.middleware.AccountMiddleware",
+
 ]
 
 # 靜態檔案設定
@@ -225,3 +227,30 @@ STORAGES = {
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"   # BASE_DIR 如果是 pathlib.Path
 
+SITE_ID = 2
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+)
+LOGIN_REDIRECT_URL = "/uma/upload/"    # 登入成功後去哪
+LOGOUT_REDIRECT_URL = "/accounts/login/"       # 登出後去哪
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = "username_email"  # 或 "email"
+ACCOUNT_EMAIL_VERIFICATION = "none"               # 先關閉驗證，之後再開
+SOCIALACCOUNT_LOGIN_ON_GET = True                 # 點 Google 直接跳轉，不用再確認
+
+# allauth 設定：只用社群登入，不開放一般註冊頁
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_VERIFICATION = "none"
+
+# Google 回來後自動登入/自動建立帳號
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_EMAIL_REQUIRED = True
+
+# 進出站導向（你可以改成你要的頁）
+LOGIN_REDIRECT_URL = "/uma/upload/"
+LOGOUT_REDIRECT_URL = "/accounts/login/"
+SOCIALACCOUNT_ADAPTER = "config.adapters.SocialAccountAdapter"

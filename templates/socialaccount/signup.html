@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load account %}
+{% load socialaccount %}
+
+{% block title %}完成註冊 | UMA Record{% endblock %}
+
+{% block content %}
+<style>
+  .auth-wrap{
+    min-height: calc(100vh - 120px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 40px 16px;
+    background: #f5f7fb;
+  }
+  .auth-card{
+    width: min(560px, 92vw);
+    background:#fff;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    padding: 28px;
+  }
+  .auth-title{
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0;
+  }
+  .auth-sub{
+    color:#6b7280;
+    margin-top: 6px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .provider-badge{
+    width:36px;height:36px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    background:#f1f5f9;
+    font-weight:800;
+  }
+  .hint{
+    color:#6b7280;
+    font-size: 13px;
+  }
+  .divider{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin: 18px 0 14px;
+    color:#9ca3af;
+    font-size: 12px;
+  }
+  .divider:before,.divider:after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:#e5e7eb;
+  }
+</style>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="d-flex align-items-center gap-3 mb-2">
+      <div class="provider-badge">G</div>
+      <div>
+        <h1 class="auth-title">完成註冊</h1>
+        <div class="auth-sub">
+          你正在使用 <strong>Google</strong> 帳號登入 UMA Record。<br>
+          最後一步：確認基本資料即可完成。
+        </div>
+      </div>
+    </div>
+
+    <div class="divider">確認資料</div>
+
+    <form method="post" action="{% url 'socialaccount_signup' %}">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <!-- email -->
+      <div class="mb-3">
+        <label class="form-label fw-bold">電子信箱</label>
+        {{ form.email.as_widget|safe }}
+        {% if form.email.errors %}
+          <div class="text-danger small mt-1">{{ form.email.errors|striptags }}</div>
+        {% endif %}
+        <div class="hint mt-1">通常會自動帶入你的 Google 信箱。</div>
+      </div>
+
+      <!-- username (如果你的流程有要求 username) -->
+      {% if form.username %}
+      <div class="mb-3">
+        <label class="form-label fw-bold">使用者名稱</label>
+        {{ form.username.as_widget|safe }}
+        {% if form.username.errors %}
+          <div class="text-danger small mt-1">{{ form.username.errors|striptags }}</div>
+        {% endif %}
+        <div class="hint mt-1">可填暱稱，之後可修改。</div>
+      </div>
+      {% endif %}
+
+      {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+      {% endif %}
+
+      <button class="btn btn-primary w-100 py-2 fw-bold" type="submit">
+        完成並登入
+      </button>
+
+      <div class="text-center mt-3">
+        <a class="btn btn-outline-secondary w-100" href="{% url 'account_login' %}">
+          返回登入
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // 統一套 bootstrap 外觀（避免你還沒改 form widgets）
+  document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach(el=>{
+    el.classList.add('form-control');
+  });
+</script>
+{% endblock %}

@@ -4,56 +4,67 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}賽馬娘育成紀錄系統{% endblock %}</title>
-
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <style>
-    body {
-      padding-top: 56px; /* 避免內容被 fixed navbar 蓋住 */
-    }
-
-    .nav-link.active {
-      font-weight: 700;
-      text-decoration: underline;
-    }
-  </style>
 </head>
-
 <body>
 
-  <!-- 🔝 固定頂端導覽列 -->
-  <nav class="navbar navbar-dark bg-dark fixed-top">
-    <div class="container-fluid justify-content-start">
-  
-      <div class="d-flex align-items-center">
-        <!-- 品牌 -->
-        <span class="navbar-brand fw-bold mb-0">UMA Record</span>
-  
-        <!-- 右邊切換（緊貼品牌） -->
-        <div class="navbar-nav flex-row ms-3 gap-3">
-          <a
-            class="nav-link {% if 'upload' in request.path %}active{% endif %}"
-            href="{% url 'uma:upload_training_results' %}">
-            上傳分析
-          </a>
-          <a 
-            class="nav-link {% if 'manual' in request.path %}active{% endif %}"
-            href="{% url 'uma:manual_create' %}">
-            手動輸入</a>       
-          <a
-            class="nav-link {% if 'result' in request.path %}active{% endif %}"
-            href="{% url 'uma:result_list' %}">
-            篩選列表
-          </a>
-        </div>
+  <!-- 固定頂端 navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="{% url 'uma:upload_training_results' %}">UMA Record</a>
+
+      <!-- 手機版收合按鈕 -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
+              aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarMain">
+        <!-- 左側：頁面切換 -->
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'upload_training_results' %}active{% endif %}"
+               href="{% url 'uma:upload_training_results' %}">
+              上傳分析
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'manual_create_result' %}active{% endif %}"
+               href="{% url 'uma:manual_create_result' %}">
+              手動輸入
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'result_list' %}active{% endif %}"
+               href="{% url 'uma:result_list' %}">
+              篩選列表
+            </a>
+          </li>
+        </ul>
+
+        <!-- 右側：登入狀態 -->
+        <ul class="navbar-nav ms-auto">
+          {% if user.is_authenticated %}
+            <li class="nav-item">
+              <span class="navbar-text text-white-50 me-3">
+                {{ user.email|default:user.username }}
+              </span>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'account_logout' %}">登出</a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'account_login' %}">登入</a>
+            </li>
+          {% endif %}
+        </ul>
       </div>
-  
     </div>
   </nav>
-  
 
-  <!-- 主內容 -->
-  <div class="container mt-4">
+  <!-- 內容區：因為 navbar fixed-top，所以上面要留空 -->
+  <div class="container mt-4" style="padding-top: 72px;">
     {% block content %}{% endblock %}
   </div>
 
@@ -62,5 +73,6 @@
     <p>© 2025 UMA Training Analyzer</p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

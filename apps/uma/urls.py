@@ -9,7 +9,7 @@ urlpatterns = [
     path("bulk-update/", views.bulk_update_results, name="bulk_update_results"),
     path("result/<int:pk>/", views.result_detail, name="result_detail"),
     path("results/", views.result_list, name="result_list"),
-    path("manual/", views.manual_create_result, name="manual_create"),
+    path("manual/", views.manual_create_result, name="manual_create_result"),
     path("results/<int:pk>/edit/", views.edit_result, name="result_edit"),
     
 ]
