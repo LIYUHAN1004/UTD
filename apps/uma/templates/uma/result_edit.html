@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}編輯紀錄{% endblock %}
+
+{% block content %}
+<style>
+  .portrait-grid { display:flex; flex-wrap:wrap; gap:10px; }
+  .portrait-btn{
+    width: 86px; height: 86px;
+    border: 2px solid rgba(0,0,0,.12);
+    border-radius: 16px;
+    padding: 4px;
+    background:#fff;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .portrait-btn img{ width: 72px; height: 72px; object-fit:cover; border-radius: 14px; }
+  .portrait-btn.active{ border-color:#0d6efd; box-shadow: 0 0 0 .2rem rgba(13,110,253,.15); }
+
+  .pill-btn.active{ background:#111; color:#fff; border-color:#111; }
+  .stat-input{ max-width: 240px; }
+</style>
+
+<h2 class="mb-3">編輯紀錄</h2>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post" id="edit-form">
+      {% csrf_token %}
+
+      <!-- hidden inputs -->
+      <input type="hidden" name="uma_key" id="id_uma_key" value="{{ current_uma_key }}">
+      <input type="hidden" name="terrain" id="id_terrain" value="{{ form.initial.terrain }}">
+      <input type="hidden" name="distance" id="id_distance" value="{{ form.initial.distance }}">
+      <input type="hidden" name="strategy" id="id_strategy" value="{{ form.initial.strategy }}">
+
+      <!-- 上半部：左頭像 / 右分數+五維 -->
+      <div class="row g-4 align-items-start">
+        <div class="col-md-3">
+          <div class="mb-2 fw-bold">頭像</div>
+
+          <div class="portrait-grid" id="portrait-grid">
+            {% for key, label in uma_choices %}
+              <button type="button" class="portrait-btn" data-uma-key="{{ key }}" title="{{ label }}">
+                <img src="{% static 'uma/portraits/' %}{{ key }}" alt="">
+              </button>
+            {% endfor %}
+          </div>
+
+          <div class="form-text mt-2">點選頭像即可</div>
+        </div>
+
+        <div class="col-md-9">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-bold">分數</label>
+              <input class="form-control stat-input" type="number" name="score" min="0" required value="{{ form.initial.score|default:0 }}">
+            </div>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-bold">速度</label>
+              <input class="form-control stat-input" type="number" name="speed" min="0" required value="{{ form.initial.speed|default:0 }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">耐力</label>
+              <input class="form-control stat-input" type="number" name="stamina" min="0" required value="{{ form.initial.stamina|default:0 }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">力量</label>
+              <input class="form-control stat-input" type="number" name="power" min="0" required value="{{ form.initial.power|default:0 }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">根性</label>
+              <input class="form-control stat-input" type="number" name="guts" min="0" required value="{{ form.initial.guts|default:0 }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">智力</label>
+              <input class="form-control stat-input" type="number" name="intelligence" min="0" required value="{{ form.initial.intelligence|default:0 }}">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <!-- 資質按鈕 -->
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="fw-bold mb-2">場地</div>
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-secondary pill-btn" data-group="terrain" data-value="草地">草地</button>
+            <button type="button" class="btn btn-outline-secondary pill-btn" data-group="terrain" data-value="沙地">沙地</button>
+            <button type="button" class="btn btn-outline-secondary" data-clear="terrain">清除</button>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="fw-bold mb-2">距離</div>
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-secondary pill-btn" data-group="distance" data-value="短距離">短距離</button>
+            <button type="button" class="btn btn-outline-secondary pill-btn" data-group="distance" data-value="一哩">一哩</button>
+            <button type="button" class="btn btn-outline-secondary pill-btn" data-group="distance" data-value="中距離">中距離</button>
+            <button type="button" class="btn btn-outline-secondary pill-btn" data-group="distance" data-value="長距離">長距離</button>
+            <button type="button" class="btn btn-outline-secondary" data-clear="distance">清除</button>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="fw-bold mb-2">腳質</div>
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-secondary pill-btn" data-group="strategy" data-value="領頭">領頭</button>
+            <button type="button" class="btn btn-outline-secondary pill-btn" data-group="strategy" data-value="前列">前列</button>
+            <button type="button" class="btn btn-outline-secondary pill-btn" data-group="strategy" data-value="居中">居中</button>
+            <button type="button" class="btn btn-outline-secondary pill-btn" data-group="strategy" data-value="後追">後追</button>
+            <button type="button" class="btn btn-outline-secondary" data-clear="strategy">清除</button>
+          </div>
+        </div>
+      </div>
+
+      {% if form.errors %}
+        <div class="alert alert-danger mt-3 mb-0">
+          請檢查輸入：{{ form.errors }}
+        </div>
+      {% endif %}
+
+      <div class="d-flex gap-2 mt-4">
+        <button class="btn btn-primary" type="submit">更新</button>
+        <a class="btn btn-outline-secondary" href="{% url 'uma:result_list' %}">返回列表</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // 預先高亮目前頭像
+  const umaKeyInput = document.getElementById("id_uma_key");
+  const currentKey = umaKeyInput.value;
+
+  document.querySelectorAll(".portrait-btn").forEach(btn => {
+    if (btn.dataset.umaKey === currentKey) btn.classList.add("active");
+  });
+
+  // 點頭像
+  document.getElementById("portrait-grid").addEventListener("click", (e) => {
+    const btn = e.target.closest(".portrait-btn");
+    if (!btn) return;
+    const key = btn.dataset.umaKey;
+
+    document.querySelectorAll(".portrait-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    umaKeyInput.value = key;
+  });
+
+  // 資質按鈕：預設回填 active
+  const hiddenMap = {
+    terrain: document.getElementById("id_terrain"),
+    distance: document.getElementById("id_distance"),
+    strategy: document.getElementById("id_strategy"),
+  };
+
+  function applyActive(group) {
+    const val = hiddenMap[group].value;
+    document.querySelectorAll(`.pill-btn[data-group="${group}"]`).forEach(b => {
+      b.classList.toggle("active", b.dataset.value === val);
+    });
+  }
+  ["terrain","distance","strategy"].forEach(applyActive);
+
+  document.addEventListener("click", (e) => {
+    const pick = e.target.closest(".pill-btn");
+    const clear = e.target.closest("[data-clear]");
+
+    if (pick) {
+      const group = pick.dataset.group;
+      const value = pick.dataset.value;
+
+      document.querySelectorAll(`.pill-btn[data-group="${group}"]`).forEach(b => b.classList.remove("active"));
+      pick.classList.add("active");
+      hiddenMap[group].value = value;
+    }
+
+    if (clear) {
+      const group = clear.dataset.clear;
+      document.querySelectorAll(`.pill-btn[data-group="${group}"]`).forEach(b => b.classList.remove("active"));
+      hiddenMap[group].value = "";
+    }
+  });
+
+  // 送出前檢查：一定要有頭像
+  document.getElementById("edit-form").addEventListener("submit", (e) => {
+    if (!umaKeyInput.value) {
+      e.preventDefault();
+      alert("請先選擇一個頭像！");
+    }
+  });
+</script>
+{% endblock %}

@@ -2,7 +2,7 @@
 {% block title %}訓練結果列表{% endblock %}
 
 {% block content %}
-<h1>殿堂馬篩選列表</h1>
+<h1>列表</h1>
 
 <form method="get" class="row g-2 align-items-end mb-3">
   <div class="col-auto">
@@ -92,13 +92,19 @@
       <tr>
         <td style="width:70px;">
           {% if r.portrait_crop %}
-            <img src="{{ r.portrait_crop.url }}" style="width:60px; height:60px; object-fit:cover; border-radius:6px;">
+            <a href="{% url 'uma:result_edit' r.pk %}">
+                <img src="{{ r.portrait_crop.url }}" style="width:60px; height:60px; object-fit:cover; border-radius:6px;">
+            </a>
           {% else %}
             —
           {% endif %}
         </td>
 
-        <td><strong>{{ r.score }}</strong></td>
+        <td>
+            <a href="{% url 'uma:result_edit' r.pk %}" style="text-decoration:none;">
+              <strong>{{ r.score }}</strong>
+            </a>
+          </td>          
         <td>{{ r.speed }}</td>
         <td>{{ r.stamina }}</td>
         <td>{{ r.power }}</td>

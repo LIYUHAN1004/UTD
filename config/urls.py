@@ -9,6 +9,7 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     path("admin/", admin.site.urls),
     path("uma/", include("apps.uma.urls")),
+
 ]
 
 # 僅在 DEBUG=True 時提供 media（本機用）

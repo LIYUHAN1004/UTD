@@ -22,7 +22,15 @@ from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from .models import TrainingResult
 
+import os
+from django.conf import settings
+from django.core.files import File
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
 
+from .forms import ManualTrainingResultForm, UMA_CHOICES
+from .models import TrainingResult
 # ====================================================
 # Windows Tesseract 路徑
 # ====================================================
@@ -340,14 +348,14 @@ def bulk_update_results(request):
 
     STRATEGY_MAP = {
         "領頭": "領頭",
-        "前": "前",
-        "前列": "前",
-        "中": "中",
-        "居中": "中",
-        "後": "後",
-        "後追": "後",
+        "前": "前列",
+        "前列": "前列",
+        "中": "居中",
+        "居中": "居中",
+        "後": "後追",
+        "後追": "後追",
     }
-    ALLOWED_STRATEGY_CANON = {"領頭", "前", "中", "後"}
+    ALLOWED_STRATEGY_CANON = {"領頭", "前列", "居中", "後追"}
 
     def clean_required_choice(v: str, allowed: set[str]) -> str:
         v = (v or "").strip()
@@ -501,3 +509,259 @@ def result_list(request):
         },
     }
     return render(request, "uma/result_list.html", context)
+
+@login_required
+def manual_create_result(request):
+    # key -> 顯示名稱（其實使用者不需要看到，但我們拿來填 uma_name）
+    uma_key_to_name = {k: v for k, v in UMA_CHOICES}
+
+    if request.method == "POST":
+        form = ManualTrainingResultForm(request.POST)
+        if form.is_valid():
+            d = form.cleaned_data
+
+            uma_key = d["uma_key"]  # 可能是 "portrait_101" 或 "portrait_101.jpg"
+            uma_name = uma_key_to_name.get(uma_key, uma_key)
+
+            obj = TrainingResult.objects.create(
+                user=request.user,
+                uma_name=uma_name,   # 使用者不輸入，我們補
+                rank="-",            # 使用者不輸入，我們補（避免必填錯）
+                score=d["score"],
+                speed=d["speed"],
+                stamina=d["stamina"],
+                power=d["power"],
+                guts=d["guts"],
+                intelligence=d["intelligence"],
+                terrain=d.get("terrain") or None,
+                distance=d.get("distance") or None,
+                strategy=d.get("strategy") or None,
+            )
+
+            # ✅ robust：uma_key 可能已經包含副檔名
+            if "." in uma_key:
+                filename = uma_key
+            else:
+                filename = f"{uma_key}.jpg"  # 你目前圖片是 jpg
+
+            portrait_path = os.path.join(
+                settings.BASE_DIR, "apps", "uma", "static", "uma", "portraits", filename
+            )
+
+            # ✅ 存到 portrait_crop（跟自動辨識一致）
+            if os.path.exists(portrait_path):
+                with open(portrait_path, "rb") as f:
+                    obj.portrait_crop.save(filename, File(f), save=True)
+            else:
+                # 找不到檔案就先提醒你（避免默默失敗）
+                messages.warning(request, f"找不到頭像檔案：{portrait_path}")
+
+            messages.success(request, "已新增一筆手動紀錄！")
+            return redirect("uma:result_list")
+    else:
+        form = ManualTrainingResultForm()
+
+    return render(request, "uma/manual_input.html", {
+        "form": form,
+        "uma_choices": UMA_CHOICES,
+    })
+    uma_key_to_name = {k: v for k, v in UMA_CHOICES}
+
+    if request.method == "POST":
+        form = ManualTrainingResultForm(request.POST)
+        if form.is_valid():
+            d = form.cleaned_data
+            uma_key = d["uma_key"]
+            uma_name = uma_key_to_name.get(uma_key, uma_key)
+
+            obj = TrainingResult.objects.create(
+                user=request.user,
+                uma_name=uma_name,     # 使用者不填，我們自動補
+                rank="-",              # 使用者不填，我們固定補，避免 DB 必填錯誤
+                score=d["score"],
+                speed=d["speed"],
+                stamina=d["stamina"],
+                power=d["power"],
+                guts=d["guts"],
+                intelligence=d["intelligence"],
+                terrain=d.get("terrain") or None,
+                distance=d.get("distance") or None,
+                strategy=d.get("strategy") or None,
+            )
+
+            # 把 static 頭像存進 ImageField: portrait
+            portrait_path = os.path.join(
+                settings.BASE_DIR, "apps", "uma", "static", "uma", "portraits", f"{uma_key}.png"
+            )
+            if os.path.exists(portrait_path):
+                with open(portrait_path, "rb") as f:
+                    obj.portrait_corp.save(f"{uma_key}.png", File(f), save=True)
+
+            messages.success(request, "已新增一筆手動紀錄！")
+            return redirect("uma:result_list")
+    else:
+        form = ManualTrainingResultForm()
+
+    # 把頭像清單丟給模板做「點頭像選」
+    return render(request, "uma/manual_input.html", {
+        "form": form,
+        "uma_choices": UMA_CHOICES,
+    })
+    uma_key_to_name = {k: v for k, v in UMA_CHOICES}
+
+    if request.method == "POST":
+        form = ManualTrainingResultForm(request.POST)
+        if form.is_valid():
+            d = form.cleaned_data
+            uma_key = d["uma_key"]
+            uma_name = uma_key_to_name.get(uma_key, uma_key)
+
+            obj = TrainingResult.objects.create(
+                user=request.user,
+                uma_name=uma_name,     # 使用者不填，我們自動補
+                rank="-",              # 使用者不填，我們固定補，避免 DB 必填錯誤
+                score=d["score"],
+                speed=d["speed"],
+                stamina=d["stamina"],
+                power=d["power"],
+                guts=d["guts"],
+                intelligence=d["intelligence"],
+                terrain=d.get("terrain") or None,
+                distance=d.get("distance") or None,
+                strategy=d.get("strategy") or None,
+            )
+
+            # 把 static 頭像存進 ImageField: portrait
+            portrait_path = os.path.join(
+                settings.BASE_DIR, "apps", "uma", "static", "uma", "portraits", f"{uma_key}.png"
+            )
+            if os.path.exists(portrait_path):
+                with open(portrait_path, "rb") as f:
+                    obj.portrait.save(f"{uma_key}.png", File(f), save=True)
+
+            messages.success(request, "已新增一筆手動紀錄！")
+            return redirect("uma:result_list")
+    else:
+        form = ManualTrainingResultForm()
+
+    # 把頭像清單丟給模板做「點頭像選」
+    return render(request, "uma/manual_input.html", {
+        "form": form,
+        "uma_choices": UMA_CHOICES,
+    })
+    # key -> 中文馬名
+    uma_key_to_name = {k: v for k, v in UMA_CHOICES}
+
+    if request.method == "POST":
+        form = ManualTrainingResultForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            uma_key = data["uma_key"]
+            uma_name = uma_key_to_name.get(uma_key, uma_key)
+
+            obj = TrainingResult.objects.create(
+                user=request.user,
+                uma_name=uma_name,
+                rank=data["rank"],
+                score=data["score"],
+                speed=data["speed"],
+                stamina=data["stamina"],
+                power=data["power"],
+                guts=data["guts"],
+                intelligence=data["intelligence"],
+                terrain=data["terrain"],
+                distance=data["distance"],
+                strategy=data["strategy"],
+            )
+
+            # ✅ 自動把 static 頭像存進 ImageField（portrait）
+            # static 檔案路徑：apps/uma/static/uma/portraits/<uma_key>.png
+            portrait_path = os.path.join(settings.BASE_DIR, "apps", "uma", "static", "uma", "portraits", f"{uma_key}.png")
+            if os.path.exists(portrait_path):
+                with open(portrait_path, "rb") as f:
+                    obj.portrait.save(f"{uma_key}.png", File(f), save=True)
+
+            messages.success(request, "已新增一筆手動紀錄！")
+            return redirect("uma:result_list")
+    else:
+        form = ManualTrainingResultForm()
+
+    return render(request, "uma/manual_input.html", {"form": form})
+
+
+@login_required
+def edit_result(request, pk: int):
+    """
+    編輯一筆訓練結果（頭像/資質/分數/五維）。
+    不讓使用者改名字/評級（仍由後端維持）。
+    """
+    obj = get_object_or_404(TrainingResult, pk=pk, user=request.user)
+    uma_key_to_name = {k: v for k, v in UMA_CHOICES}
+
+    def _current_uma_key_from_obj(o: TrainingResult) -> str:
+        # 從 portrait_crop 檔名推回 key（例如 "uma/portrait_crop/portrait_101.jpg" -> "portrait_101.jpg"）
+        if o.portrait_crop and getattr(o.portrait_crop, "name", ""):
+            return os.path.basename(o.portrait_crop.name)
+        return ""
+
+    if request.method == "POST":
+        form = ManualTrainingResultForm(request.POST)
+        if form.is_valid():
+            d = form.cleaned_data
+
+            uma_key = d["uma_key"]  # 可能是 "portrait_101.jpg" 或 "portrait_101"
+            if "." in uma_key:
+                filename = uma_key
+            else:
+                filename = f"{uma_key}.jpg"  # 你現在用 jpg
+
+            # 更新數值與資質
+            obj.score = d["score"]
+            obj.speed = d["speed"]
+            obj.stamina = d["stamina"]
+            obj.power = d["power"]
+            obj.guts = d["guts"]
+            obj.intelligence = d["intelligence"]
+
+            obj.terrain = d.get("terrain") or None
+            obj.distance = d.get("distance") or None
+            obj.strategy = d.get("strategy") or None
+
+            # 更新 uma_name（使用者不看到，但資料仍一致）
+            obj.uma_name = uma_key_to_name.get(uma_key, uma_key_to_name.get(filename, obj.uma_name))
+
+            obj.save()
+
+            # 若選了頭像，就把對應 static 圖存到 portrait_crop（統一顯示欄位）
+            portrait_path = os.path.join(
+                settings.BASE_DIR, "apps", "uma", "static", "uma", "portraits", filename
+            )
+            if os.path.exists(portrait_path):
+                with open(portrait_path, "rb") as f:
+                    obj.portrait_crop.save(filename, File(f), save=True)
+            else:
+                messages.warning(request, f"找不到頭像檔案：{filename}")
+
+            messages.success(request, "已更新這筆紀錄！")
+            return redirect("uma:result_list")
+    else:
+        # 用 ManualTrainingResultForm 當作驗證器即可，初始值直接塞到模板 input
+        form = ManualTrainingResultForm(initial={
+            "uma_key": _current_uma_key_from_obj(obj),
+            "score": obj.score,
+            "speed": obj.speed,
+            "stamina": obj.stamina,
+            "power": obj.power,
+            "guts": obj.guts,
+            "intelligence": obj.intelligence,
+            "terrain": obj.terrain or "",
+            "distance": obj.distance or "",
+            "strategy": obj.strategy or "",
+        })
+
+    return render(request, "uma/result_edit.html", {
+        "form": form,
+        "obj": obj,
+        "uma_choices": UMA_CHOICES,
+        "current_uma_key": _current_uma_key_from_obj(obj),  # 用來預先高亮頭像
+    })

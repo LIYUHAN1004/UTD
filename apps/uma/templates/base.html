@@ -4,15 +4,55 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}賽馬娘育成紀錄系統{% endblock %}</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      padding-top: 56px; /* 避免內容被 fixed navbar 蓋住 */
+    }
+
+    .nav-link.active {
+      font-weight: 700;
+      text-decoration: underline;
+    }
+  </style>
 </head>
+
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">UMA Record</a>
+
+  <!-- 🔝 固定頂端導覽列 -->
+  <nav class="navbar navbar-dark bg-dark fixed-top">
+    <div class="container-fluid justify-content-start">
+  
+      <div class="d-flex align-items-center">
+        <!-- 品牌 -->
+        <span class="navbar-brand fw-bold mb-0">UMA Record</span>
+  
+        <!-- 右邊切換（緊貼品牌） -->
+        <div class="navbar-nav flex-row ms-3 gap-3">
+          <a
+            class="nav-link {% if 'upload' in request.path %}active{% endif %}"
+            href="{% url 'uma:upload_training_results' %}">
+            上傳分析
+          </a>
+          <a 
+            class="nav-link {% if 'manual' in request.path %}active{% endif %}"
+            href="{% url 'uma:manual_create' %}">
+            手動輸入</a>       
+          <a
+            class="nav-link {% if 'result' in request.path %}active{% endif %}"
+            href="{% url 'uma:result_list' %}">
+            篩選列表
+          </a>
+        </div>
+      </div>
+  
     </div>
   </nav>
+  
 
+  <!-- 主內容 -->
   <div class="container mt-4">
     {% block content %}{% endblock %}
   </div>
@@ -21,5 +61,6 @@
     <hr>
     <p>© 2025 UMA Training Analyzer</p>
   </footer>
+
 </body>
 </html>
