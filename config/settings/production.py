@@ -16,6 +16,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', "utd2.zeabur.app").split(',')
 # 資料庫設定
 # Zeabur 會自動注入 POSTGRES_CONNECTION_STRING
 postgres_connection_string = os.getenv('POSTGRES_CONNECTION_STRING')
+print("✅ LOADED PRODUCTION SETTINGS")
 
 if postgres_connection_string:
     # 在 Zeabur 上使用 PostgreSQL
@@ -41,3 +42,5 @@ CSRF_COOKIE_SECURE = True  # CSRF Cookie 只能透過 HTTPS 傳輸
 
 # 信任 Zeabur 的代理伺服器
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# 關掉 allauth 內建的 rate limit（登入/註冊）
+ACCOUNT_RATE_LIMITS = {}

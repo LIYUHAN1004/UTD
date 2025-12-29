@@ -163,16 +163,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REDIS_URI = os.getenv('REDIS_URI', 'redis://127.0.0.1:6379/1')
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        
-        'KEY_PREFIX': 'uma',  # 所有 key 都會加上這個前綴
-        'TIMEOUT': 300,  # 預設快取時間 5 分鐘（單位：秒）
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
     }
 }
 
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
+MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 # ==========================================
 # Celery 設定 - 使用 Redis 作為 Broker
 # ==========================================
